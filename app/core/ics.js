@@ -72,7 +72,7 @@ export function buildICS({ model, exams, semester, campus = "serdang", now = new
   const L = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//JadualKu//UPM//MS",
+    "PRODID:-//Student Schedule Generator//UPM//MS",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     `X-WR-CALNAME:${esc("Jadual " + semester.label)}`,

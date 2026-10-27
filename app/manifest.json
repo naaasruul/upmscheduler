@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "JadualKu: Jadual Kelas UPM",
-  "short_name": "JadualKu",
+  "name": "Student Schedule Generator",
+  "short_name": "Schedule Gen",
   "version": "0.1.0",
   "description": "Jana wallpaper jadual kelas (iPhone/iPad) dan fail .ics dari eSMP. Tidak rasmi, bukan aplikasi UPM.",
   "permissions": [
@@ -28,7 +28,7 @@
     }
   ],
   "action": {
-    "default_title": "JadualKu: jana jadual dari eSMP",
+    "default_title": "Student Schedule Generator: jana jadual dari eSMP",
     "default_icon": {
       "16": "icons/icon-16.png",
       "32": "icons/icon-32.png",

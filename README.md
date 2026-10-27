@@ -1,4 +1,4 @@
-# JadualKu
+# Student Schedule Generator
 
 Jana wallpaper jadual kelas (iPhone/iPad, menegak/melintang) dan fail `.ics` untuk Calendar, terus dari eSMP UPM.
 
@@ -9,7 +9,7 @@ Website: https://naaasruul.github.io/upmscheduler/ (cuba contoh: https://naaasru
 ## Cara guna
 
 1. Pasang extension (lihat bawah) dalam Chrome kat laptop.
-2. Login eSMP. Tekan butang **Jana Jadual** di bucu kanan bawah (atau ikon JadualKu kat toolbar).
+2. Login eSMP. Tekan butang **Jana Jadual** di bucu kanan bawah (atau ikon Student Schedule Generator kat toolbar).
 3. Pilih gaya (Comel / Gelap) dan saiz, kemudian **Muat turun PNG**. Atau tekan **Hantar ke phone**, scan QR guna phone, dan simpan gambar sebagai wallpaper.
 4. Untuk Calendar: buka bahagian **Calendar (.ics)**, semak semester, dan **Muat turun .ics**. Buka fail tu kat iPhone, atau import ke Google Calendar.
 

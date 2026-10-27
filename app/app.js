@@ -1,4 +1,4 @@
-// UI JadualKu. Satu halaman untuk tiga mod:
+// UI Student Schedule Generator. Satu halaman untuk tiga mod:
 //   extension (laptop) : data dari chrome.storage (diisi oleh ext/content.js)
 //   website + #d=...   : data dari QR (phone/iPad)
 //   website kosong     : landing + contoh

@@ -1,5 +1,5 @@
 {
-  "name": "jadualku",
+  "name": "student-schedule-generator",
   "private": true,
   "type": "module",
   "scripts": {

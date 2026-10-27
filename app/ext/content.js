@@ -1,6 +1,6 @@
 // Dijalankan dalam halaman eSMP. Tambah butang "Jana Jadual"; bila diklik, ambil jadual
 // kuliah + exam guna session login pelajar sendiri (same-origin), simpan dalam storan
-// extension, dan buka halaman JadualKu. Password tak disentuh langsung.
+// extension, dan buka halaman Student Schedule Generator. Password tak disentuh langsung.
 
 const BASE = "https://esmp.upm.edu.my/smp/action/portal/student/MyTimetable/";
 const URL_CLASS = BASE + "MTT_GetJadualWaktuKuliahPelajar_AjaxSetupAction";
@@ -57,7 +57,7 @@ function addButton() {
   btn.id = "jadualku-btn";
   btn.type = "button";
   btn.textContent = "Jana Jadual";
-  btn.title = "JadualKu: jana wallpaper dan .ics dari jadual eSMP kau";
+  btn.title = "Student Schedule Generator: jana wallpaper dan .ics dari jadual eSMP kau";
   btn.addEventListener("click", () => generate(btn));
   document.body.append(btn);
 }
