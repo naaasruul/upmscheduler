@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="ms">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>JadualKu</title>
+  <meta name="description" content="Jana wallpaper jadual kelas (iPhone/iPad) dan fail .ics dari eSMP UPM. Tidak rasmi.">
+  <link rel="icon" href="icons/icon-128.png">
+  <link rel="stylesheet" href="app.css">
+  <script src="vendor/qrcode.js" defer></script>
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header class="top">
+    <div class="brand"><span class="mark" aria-hidden="true"></span>JadualKu</div>
+    <p class="tag">Tidak rasmi · untuk pelajar UPM</p>
+  </header>
+
+  <!-- Landing: website dibuka tanpa data -->
+  <main id="landing" class="landing" hidden>
+    <h1>Jadual kelas kau, jadi wallpaper.</h1>
+    <p class="lead">Ambil jadual terus dari eSMP, pilih gaya, dan simpan sebagai wallpaper iPhone atau iPad. Boleh juga masukkan ke Calendar.</p>
+    <ol class="steps">
+      <li><b>Pasang extension</b> JadualKu dalam Chrome kat laptop.</li>
+      <li><b>Login eSMP</b> macam biasa, kemudian tekan butang <i>Jana Jadual</i>.</li>
+      <li><b>Scan QR</b> guna phone, dan simpan wallpaper.</li>
+    </ol>
+    <div class="row">
+      <a class="btn primary" href="https://github.com/naaasruul/upmscheduler#pasang-extension">Pasang extension</a>
+      <button class="btn" id="demo" type="button">Cuba dengan contoh</button>
+    </div>
+    <p class="fine">Password eSMP kau tak pernah keluar dari browser. Jadual diproses dalam browser kau sendiri dan tak dihantar ke mana-mana server.</p>
+  </main>
+
+  <!-- Ralat -->
+  <main id="error" class="landing" hidden>
+    <h1>Tak dapat baca jadual</h1>
+    <p class="lead" id="error-msg"></p>
+    <a class="btn primary" href="https://esmp.upm.edu.my/smp/action/security/loginSmpSetup">Buka eSMP</a>
+  </main>
+
+  <!-- Editor -->
+  <main id="editor" class="editor" hidden>
+    <section class="stage" aria-label="Pratonton">
+      <div class="frame" id="frame"><canvas id="canvas"></canvas></div>
+      <img id="phone-img" class="phone-img" alt="Wallpaper jadual kelas" hidden>
+      <p class="hint" id="stage-hint"></p>
+    </section>
+
+    <section class="panel">
+      <div id="warnings" class="warnings" role="status" hidden></div>
+
+      <div class="group">
+        <span class="label" id="lbl-theme">Gaya</span>
+        <div class="seg" role="radiogroup" aria-labelledby="lbl-theme" id="theme"></div>
+      </div>
+
+      <div class="group" id="size-group">
+        <span class="label" id="lbl-size">Saiz</span>
+        <div class="seg seg-4" role="radiogroup" aria-labelledby="lbl-size" id="size"></div>
+      </div>
+
+      <div class="group">
+        <label class="label" for="title">Tajuk</label>
+        <input id="title" class="input" maxlength="40" autocomplete="off">
+      </div>
+
+      <div class="actions">
+        <button class="btn primary" id="save-png" type="button">Muat turun PNG</button>
+        <button class="btn" id="to-phone" type="button">Hantar ke phone</button>
+      </div>
+
+      <div class="qr-card" id="qr-card" hidden>
+        <canvas id="qr" aria-label="QR code ke website JadualKu"></canvas>
+        <div>
+          <p><b>Scan guna kamera phone.</b> Website JadualKu akan terbuka dengan jadual kau, dan gambar dijana ikut saiz skrin phone tu.</p>
+          <button class="btn small" id="copy-link" type="button">Salin link</button>
+        </div>
+      </div>
+
+      <details class="group subjects" id="subjects-box" open>
+        <summary class="label">Semak subjek <span id="subj-count" class="muted"></span></summary>
+        <p class="muted small">Nama pendek dipaparkan dalam blok. Klik untuk ubah. Masa ditunjuk sebagaimana tertulis dalam eSMP.</p>
+        <ul id="subjects" class="subj-list"></ul>
+      </details>
+
+      <details class="group cal" id="cal-box">
+        <summary class="label">Calendar (.ics)</summary>
+        <div class="two">
+          <label>Semester
+            <select id="semester" class="input"></select>
+          </label>
+          <label>Kampus
+            <select id="campus" class="input"></select>
+          </label>
+        </div>
+        <div class="two" id="custom-dates" hidden>
+          <label>Mula<input type="date" id="c-start" class="input"></label>
+          <label>Tamat<input type="date" id="c-end" class="input"></label>
+        </div>
+        <p class="small" id="sem-info"></p>
+        <p class="small" id="exam-info"></p>
+        <button class="btn" id="save-ics" type="button">Muat turun .ics</button>
+        <p class="muted small">Fail ni tak sync sendiri. Kalau jadual berubah, muat turun dan import semula.</p>
+      </details>
+    </section>
+  </main>
+
+  <footer class="foot">
+    Bukan aplikasi rasmi UPM. Sentiasa semak dengan eSMP.
+  </footer>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

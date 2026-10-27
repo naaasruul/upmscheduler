@@ -16,7 +16,7 @@ import os
 import sys
 from datetime import datetime, date, timedelta
 
-from smp_parser import parse_class_timetable, parse_exam_timetable
+from smp_parser import parse_class_timetable, parse_exam_timetable, NoTimetableTable
 
 # ====== CONFIG — GANTI dengan tarikh sebenar dari Kalendar Akademik UPM ======
 SEMESTER_START = "2026-10-01"   # hari mula kuliah (mana-mana hari dalam minggu pertama)
@@ -59,27 +59,34 @@ def _recurring_event(uid, summary, location, day_num, start_hm, end_hm,
 
 
 def build_lecture_events(courses, sem_start, sem_end):
-    out = []
+    out, seen = [], set()
     for c in courses:
-        for kind, sessions in (("Kuliah", c["lectures"]), ("Amali", c["practicals"])):
+        for kind, sessions, group in (("Kuliah", c["lectures"], c.get("lecture_group", "")),
+                                      ("Amali", c["practicals"], c.get("practical_group", ""))):
             for s in sessions:
                 if not s.get("day_num"):
                     continue
                 uid = f"{kind[0]}:{c['code']}:{s['day']}:{s['start']}"
+                if uid in seen:     # uid sama dua kali -> event duplicate yang tak pernah dipadam
+                    continue
+                seen.add(uid)
                 summary = f"{c['code']} {kind}" + (f" — {c['name']}" if c['name'] else "")
                 out.append(_recurring_event(
                     uid, summary, s["venue"], s["day_num"], s["start"], s["end"],
-                    sem_start, sem_end, description=f"Kumpulan: {c.get('lecture_group','')}"))
+                    sem_start, sem_end, description=f"Kumpulan: {group}"))
     return out
 
 
 def build_exam_events(examdata):
-    out = []
+    out, seen = [], set()
     draft = examdata.get("is_draft")
     for e in examdata["exams"]:
         if not (e["date"] and e["start"]):
             continue
         uid = f"E:{e['code']}:{e['date']}"
+        if uid in seen:
+            continue
+        seen.add(uid)
         desc = "Kumpulan: " + e.get("group", "")
         if draft:
             desc += "\n(AMARAN: jadual exam masih DRAFT, boleh berubah.)"
@@ -111,6 +118,14 @@ def get_service():
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
+            if not os.path.exists("credentials.json"):
+                print("!! credentials.json takde dalam", os.getcwd())
+                print("   1. https://console.cloud.google.com -> buat/pilih project")
+                print("   2. APIs & Services -> Library -> enable 'Google Calendar API'")
+                print("   3. OAuth consent screen -> External, tambah email kau sebagai Test user")
+                print("   4. Credentials -> Create credentials -> OAuth client ID -> Desktop app")
+                print("   5. Download JSON, rename jadi credentials.json, letak dalam folder ni")
+                sys.exit(1)
             flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
             creds = flow.run_local_server(port=0)
         with open("token.json", "w") as f:
@@ -148,7 +163,8 @@ def _existing_by_uid(service, cal_id):
     return out
 
 
-def sync(service, cal_id, events):
+def sync(service, cal_id, events, keep_prefixes=()):
+    """keep_prefixes: prefix uid yang TAK boleh dipadam (cth 'E:' bila jadual exam gagal diambil)."""
     existing = _existing_by_uid(service, cal_id)
     seen = set()
     created = updated = deleted = 0
@@ -162,7 +178,7 @@ def sync(service, cal_id, events):
             service.events().insert(calendarId=cal_id, body=body).execute()
             created += 1
     for uid, eid in existing.items():
-        if uid not in seen:
+        if uid not in seen and not uid.startswith(tuple(keep_prefixes)):
             service.events().delete(calendarId=cal_id, eventId=eid).execute()
             deleted += 1
     return created, updated, deleted
@@ -186,14 +202,27 @@ def main():
         ok, _ = sc.login(s, user, pw)
         if not ok:
             print("Login gagal."); sys.exit(1)
-        courses = parse_class_timetable(sc.fetch(s, sc.URL_CLASS))
-        exams = parse_exam_timetable(sc.fetch(s, sc.URL_EXAM))
+        try:
+            courses = parse_class_timetable(sc.fetch(s, sc.URL_CLASS))
+        except NoTimetableTable:
+            print("!! Jadual kuliah tak dapat diambil — sync dibatalkan, kalendar tak diusik.")
+            sys.exit(1)
+        try:
+            exams = parse_exam_timetable(sc.fetch(s, sc.URL_EXAM))
+        except NoTimetableTable:
+            print("!! Jadual exam belum ada — event exam sedia ada dikekalkan.")
+            exams = None
 
-    events = build_lecture_events(courses, sem_start, sem_end) + build_exam_events(exams)
+    keep = ("E:",) if exams is None else ()
+    events = build_lecture_events(courses, sem_start, sem_end)
+    if exams is not None:
+        events += build_exam_events(exams)
     print(f"Jumlah event dibina: {len(events)}")
+    if not courses:
+        print("!! 0 kursus dijumpai — sync dibatalkan supaya event sedia ada tak dipadam.")
+        sys.exit(1)
 
     if "--dry-run" in sys.argv:
-        import json
         for ev in events:
             r = ev.get("recurrence", ["(single)"])[0]
             print(f"\n{ev['summary']}")
@@ -204,7 +233,7 @@ def main():
 
     service = get_service()
     cal_id = ensure_calendar(service, CALENDAR_NAME)
-    c, u, d = sync(service, cal_id, events)
+    c, u, d = sync(service, cal_id, events, keep_prefixes=keep)
     print(f"Selesai. Dicipta:{c} Dikemaskini:{u} Dipadam:{d}  -> kalendar '{CALENDAR_NAME}'")
 
 

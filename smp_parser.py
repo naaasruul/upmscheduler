@@ -34,8 +34,11 @@ def _find_table(soup, headers):
     cand = soup.find("table", class_="sortablescroll")
     if cand and all(h in cand.get_text().upper() for h in headers):
         return cand
-    for t in soup.find_all("table"):
-        if all(h in t.get_text().upper() for h in headers):
+    # Ambil table paling dalam yang padan — table layout luar pun mengandungi teks header.
+    matches = [t for t in soup.find_all("table")
+               if all(h in t.get_text().upper() for h in headers)]
+    for t in matches:
+        if not any(m is not t and t in m.parents for m in matches):
             return t
     return None
 
@@ -64,11 +67,12 @@ def parse_masa(code):
     code = (code or "").strip()
     if not code:
         return out
-    for part in re.split(r"[;,/]+", code):
+    # Pemisah: ; , / atau ruang sebelum kod hari baru ('I08-10 R08').
+    for part in re.split(r"[;,/]+|\s+(?=[A-Za-z])", code):
         part = part.strip()
         if not part:
             continue
-        m = re.match(r"^([A-Za-z]+)\s*(\d{1,2})(?:-(\d{1,2}))?$", part)
+        m = re.match(r"^([A-Za-z]+)\s*(\d{1,2})(?:\s*-\s*(\d{1,2}))?$", part)
         if not m:
             out.append({"raw": part, "error": "format tak dikenali"})
             continue
@@ -97,7 +101,10 @@ def parse_class_timetable(html):
         if len(tds) < 9:
             continue
         first = tds[0]
-        is_continuation = first.has_attr("mergecell") or not first.get_text(strip=True)
+        first_txt = first.get_text(strip=True)
+        is_continuation = first.has_attr("mergecell") or not first_txt
+        if not is_continuation and not first_txt.isdigit():
+            continue  # baris header guna <td>, bukan <th>
         if not is_continuation:
             code, name, credit = _split_course(tds[1].get_text(" ", strip=True))
             current = {
@@ -126,8 +133,11 @@ def _iso_date(d):
 
 
 def _exam_time(t):
-    m = re.match(r"^(\d{2})(\d{2})-(\d{2})(\d{2})$", t.strip())
-    return (f"{m.group(1)}:{m.group(2)}", f"{m.group(3)}:{m.group(4)}") if m else (None, None)
+    m = re.match(r"^(\d{1,2})[:.]?(\d{2})\s*-\s*(\d{1,2})[:.]?(\d{2})$", t.strip())
+    if not m:
+        return None, None
+    h1, m1, h2, m2 = m.groups()
+    return f"{int(h1):02d}:{m1}", f"{int(h2):02d}:{m2}"
 
 
 def parse_exam_timetable(html):

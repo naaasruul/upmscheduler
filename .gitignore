@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+token.json
+credentials.json
+*_raw.html
+after_login.html
+.superpowers/

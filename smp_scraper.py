@@ -35,9 +35,27 @@ UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/120.0 Safari/537.36")
 
 
+# Server esmp tak hantar sijil intermediate Sectigo (chain tak lengkap). Browser
+# boleh cari sendiri, Python tak -> CERTIFICATE_VERIFY_FAILED. Jadi kita tambah
+# intermediate tu ke bundle certifi. SSL verification masih penuh, bukan dimatikan.
+INTERMEDIATE_PEM = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sectigo_dv_r36.pem")
+
+
+def _ca_bundle():
+    import certifi
+    import tempfile
+    path = os.path.join(tempfile.gettempdir(), "smp_upm_ca_bundle.pem")
+    with open(certifi.where(), encoding="utf-8") as a, open(INTERMEDIATE_PEM, encoding="utf-8") as b:
+        bundle = a.read() + "\n" + b.read()
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(bundle)
+    return path
+
+
 def make_session():
     s = requests.Session()
     s.headers.update({"User-Agent": UA})
+    s.verify = _ca_bundle()
     return s
 
 
@@ -77,7 +95,7 @@ def main():
         print("!! Login GAGAL. Tengok after_login.html.")
         print("   Kalau pasti password betul, mungkin detection silap — hantar aku output ni.")
         sys.exit(1)
-    print("   Login OK. Cookies:", s.cookies.get_dict())
+    print("   Login OK. Cookies:", list(s.cookies.get_dict()))
 
     targets = [
         ("kuliah", URL_CLASS, parse_class_timetable),
